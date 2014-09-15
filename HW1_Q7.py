@@ -107,7 +107,7 @@ def find_error(predicted, actual, fold_stats) :
 
 
 #Classifies using the sklearn Naive Bayes classifier for either no smoothing or Laplace smoothing
-def sk_learn_NB(a, jane_data, sherlock_data, k) :
+def sk_learn_NB(a, jane_data, sherlock_data, k, e, l) :
     NB = MultinomialNB()
     NB.set_params(alpha=a)
 
@@ -152,13 +152,13 @@ def sk_learn_NB(a, jane_data, sherlock_data, k) :
     var_recall = numpy.var(recall_list)
     var_precision = numpy.var(precision_list)
     var_fstat = numpy.var(fstat_list)
-    print("Average stats for", k, "-fold cross-validation with l=", l, "and e=", estimator)
+    print("Average stats for", k, "-fold cross-validation with l=", l, "and e=", e)
     print("Recall: ", recall_overall_avg, "with variance:", var_recall)
     print("Precision: ", precision_overall_avg, "with variance:", var_precision)
     print("F-statistic: ", fstat_overall_avg, "with variance:", var_fstat)
 
 #Classifies using the Good-Turing estimator
-def good_turing(jane_data, sherlock_data, features, k) :
+def good_turing(jane_data, sherlock_data, features, k, l) :
     #K-fold cross-validation
     kf_jane = cross_validation.KFold(len(jane_data), n_folds = k, shuffle = True)
     kf_sherlock = cross_validation.KFold(len(sherlock_data), n_folds = k, shuffle = True)
@@ -196,25 +196,20 @@ def good_turing(jane_data, sherlock_data, features, k) :
         for index in jane_train_index[i] :
             for p in jane_data[index] :
                 jane_train.append(p)
-                print("1")
         for index in jane_test_index[i] :
             test.append(jane_data[index])
             actual.append(0)
-            print("2")
         for index in sherlock_train_index[i] :
             for p in sherlock_data[index] :
                 sherlock_train.append(p)
-                print("3")
         for index in sherlock_test_index[i] :
             test.append(sherlock_data[index])
             actual.append(1)
-            print("4")
         
         fd_jane = nltk.FreqDist(jane_train)
         fd_sherlock = nltk.FreqDist(sherlock_train)
         gt_jane = simplegoodturing.SimpleGoodTuringProbDist(fd_jane)
         gt_sherlock = simplegoodturing.SimpleGoodTuringProbDist(fd_sherlock)
-        print("5")
         predicted = []
         jane_prob = math.log2(len(jane_train)/(len(jane_train)+len(sherlock_train)))
         sherlock_prob = math.log2(len(sherlock_train)/(len(jane_train)+len(sherlock_train)))
@@ -227,8 +222,6 @@ def good_turing(jane_data, sherlock_data, features, k) :
                 predicted.append(0)
             else :
                 predicted.append(1)
-            print("6")
-        print("7")
         find_error(predicted, actual, fold_stats)
         
     #Determining average stats for k-fold cross-validation
@@ -251,7 +244,7 @@ def good_turing(jane_data, sherlock_data, features, k) :
     var_recall = numpy.var(recall_list)
     var_precision = numpy.var(precision_list)
     var_fstat = numpy.var(fstat_list)
-    print("Average stats for", k, "-fold cross-validation with l=", l, "and e=", estimator)
+    print("Average stats for", k, "-fold cross-validation with l=", l, "Good-Turing estimator")
     print("Recall: ", recall_overall_avg, "with variance:", var_recall)
     print("Precision: ", precision_overall_avg, "with variance:", var_precision)
     print("F-statistic: ", fstat_overall_avg, "with variance:", var_fstat)
@@ -285,14 +278,14 @@ def run(l, k, estimator, n) :
     
     #Set estimator
     if(estimator == 0) :
-        sk_learn_NB(0.00000000000001, jane_data, sherlock_data, k)
+        sk_learn_NB(0.00000000000001, jane_data, sherlock_data, k, e, l)
     elif(estimator == 1) :
         sk_learn_NB(1.0, jane_data, sherlock_data, k)
     else :
-        good_turing(jane_snippets, sherlock_snippets, features, k)
+        good_turing(jane_snippets, sherlock_snippets, features, k, l)
+
         
-run(1, 10, 2, 500)
-'''
+run(1, 10, 0, 500)
 run(2, 10, 0, 500)
 run(5, 10, 0, 500)
 run(10, 10, 0, 500)
@@ -301,5 +294,9 @@ run(1, 10, 1, 500)
 run(2, 10, 1, 500)
 run(5, 10, 1, 500)
 run(10, 10, 1, 500)
-run(50, 10, 1, 500)
-'''
+run(50, 10, 1, 500)       
+run(1, 10, 2, 500)
+run(2, 10, 2, 500)
+run(5, 10, 2, 500)
+run(10, 10, 2, 500)
+run(50, 10, 2, 500)
